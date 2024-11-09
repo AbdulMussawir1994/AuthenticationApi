@@ -22,6 +22,8 @@ using RegistrationApiProject.RepositoryLayer.EmailLayers;
 using RegistrationApiProject.RepositoryLayer.OtpLayers;
 using RegistrationApiProject.ViewModel;
 using RegistrationApiProject.RepositoryLayer.SMSLayers;
+using FluentValidation.AspNetCore;
+using FluentValidation;
 
 
 var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
@@ -62,7 +64,7 @@ try
     builder.Services.AddResponseCaching();
     builder.Services.AddHttpClient();
     builder.Services.AddHttpContextAccessor();
- //   builder.Services.AddSingleton<IUrlHelperFactory, UrlHelperFactory>();
+    //   builder.Services.AddSingleton<IUrlHelperFactory, UrlHelperFactory>();
 
     builder.Services.AddControllers(options =>
     {
@@ -73,6 +75,10 @@ try
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.IgnoreReadOnlyFields = true;
     });
+
+    // Register FluentValidation with all validators in the current assembly
+    builder.Services.AddFluentValidationAutoValidation()
+        .AddValidatorsFromAssemblyContaining<ApplicationUserValidator>(); // Replace with any validator's type
 
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {

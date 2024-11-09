@@ -12,8 +12,8 @@ using RegistrationApiProject.DatabaseContext;
 namespace RegistrationApiProject.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20241022161414_Init")]
-    partial class Init
+    [Migration("20241108105050_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
