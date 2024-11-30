@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 using RegistrationApiProject.Model;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Reflection.Emit;
 
 namespace RegistrationApiProject.DatabaseContext;
 
@@ -49,6 +50,23 @@ public class DbContextClass : IdentityDbContext<ApplicationUser>
         builder.Entity<ApplicationUser>()
             .HasIndex(u => u.IcNumber)
         .IsUnique();
+
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(e => e.IcNumber)
+                  .IsRequired()
+                  .HasMaxLength(12); // Assuming Malaysian IC length
+
+            entity.HasIndex(e => e.IcNumber)
+                  .IsUnique();
+
+            entity.Property(e => e.DateCreated)
+                  .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.Property(e => e.DateModified)
+                  .HasDefaultValueSql("GETUTCDATE()")
+                  .ValueGeneratedOnAddOrUpdate();
+        });
     }
 
     public DbSet<OtpModel> OtpsDb => Set<OtpModel>();
