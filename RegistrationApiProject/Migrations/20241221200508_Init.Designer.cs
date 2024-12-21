@@ -12,8 +12,8 @@ using RegistrationApiProject.DatabaseContext;
 namespace RegistrationApiProject.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20241108105050_initial")]
-    partial class initial
+    [Migration("20241221200508_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -171,9 +171,11 @@ namespace RegistrationApiProject.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<DateTime>("DateModified")
+                    b.Property<DateTime?>("DateModified")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
@@ -187,7 +189,9 @@ namespace RegistrationApiProject.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("IcNumber")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<bool>("IsLoginVerified")
                         .HasColumnType("bit");
@@ -213,7 +217,7 @@ namespace RegistrationApiProject.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
@@ -230,9 +234,12 @@ namespace RegistrationApiProject.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IcNumber")
+                    b.HasIndex("Email")
                         .IsUnique()
-                        .HasFilter("[IcNumber] IS NOT NULL");
+                        .HasFilter("[Email] IS NOT NULL");
+
+                    b.HasIndex("IcNumber")
+                        .IsUnique();
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -241,6 +248,14 @@ namespace RegistrationApiProject.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("PhoneNumber")
+                        .IsUnique()
+                        .HasFilter("[PhoneNumber] IS NOT NULL");
+
+                    b.HasIndex("UserName")
+                        .IsUnique()
+                        .HasFilter("[UserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });

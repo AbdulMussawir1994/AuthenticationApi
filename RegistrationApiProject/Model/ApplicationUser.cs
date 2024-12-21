@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RegistrationApiProject.Model;
 
@@ -10,8 +11,11 @@ public class ApplicationUser : IdentityUser
     public bool IsPrivacy { get; set; } = false;
     public bool IsLoginVerified { get; set; } = false;
     public int FailedPasswordAttempts { get; set; } = 0;
-    public DateTime DateCreated { get; private set; } = DateTime.UtcNow;
-    public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
-    public void UpdateModifiedDate() => DateModified = DateTime.UtcNow;
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+
+    public DateTime? DateModified { get; set; } // Nullable DateModified
+
+    //   public void UpdateModifiedDate() => DateModified = DateTime.UtcNow;
 }

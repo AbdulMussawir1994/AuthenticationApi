@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
-using RegistrationApiProject.Model;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using System.Reflection.Emit;
+using RegistrationApiProject.Model;
 
 namespace RegistrationApiProject.DatabaseContext;
 
@@ -20,8 +19,14 @@ public class DbContextClass : IdentityDbContext<ApplicationUser>
             var databaseCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
             if (databaseCreator != null)
             {
-                if (!databaseCreator.CanConnect()) databaseCreator.Create();
-                if (!databaseCreator.HasTables()) databaseCreator.CreateTables();
+                if (!databaseCreator.CanConnect())
+                {
+                    databaseCreator.Create();
+                }
+                if (!databaseCreator.HasTables())
+                {
+                    databaseCreator.CreateTables();
+                }
             }
         }
         catch (Exception ex)
@@ -36,9 +41,10 @@ public class DbContextClass : IdentityDbContext<ApplicationUser>
         {
             if (entry.State == EntityState.Modified)
             {
-                entry.Entity.UpdateModifiedDate();
+                entry.Entity.DateModified = DateTime.UtcNow;
             }
         }
+
         return await base.SaveChangesAsync(cancellationToken);
     }
 
@@ -46,27 +52,21 @@ public class DbContextClass : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
-        // Ensure IC number is unique in ApplicationUser
-        builder.Entity<ApplicationUser>()
-            .HasIndex(u => u.IcNumber)
-        .IsUnique();
-
         builder.Entity<ApplicationUser>(entity =>
         {
+            entity.HasIndex(u => u.IcNumber).IsUnique();
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.HasIndex(u => u.UserName).IsUnique();
+            entity.HasIndex(u => u.PhoneNumber).IsUnique();
+
             entity.Property(e => e.IcNumber)
                   .IsRequired()
-                  .HasMaxLength(12); // Assuming Malaysian IC length
-
-            entity.HasIndex(e => e.IcNumber)
-                  .IsUnique();
+                  .HasMaxLength(12);
 
             entity.Property(e => e.DateCreated)
                   .HasDefaultValueSql("GETUTCDATE()");
-
-            entity.Property(e => e.DateModified)
-                  .HasDefaultValueSql("GETUTCDATE()")
-                  .ValueGeneratedOnAddOrUpdate();
         });
+
     }
 
     public DbSet<OtpModel> OtpsDb => Set<OtpModel>();

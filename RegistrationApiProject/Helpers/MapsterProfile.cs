@@ -12,10 +12,10 @@ public sealed class MapsterProfile : TypeAdapterConfig
 
         //// User Mapster
         TypeAdapterConfig<RegisterViewModel, RegisterViewDto>.NewConfig()
-         .Map(dest => dest.fullName, src => src.Username)
-         .Map(dest => dest.emailAddress, src => src.Email)
-         .Map(dest => dest.identityNo, src => src.IcNumber)
-         .Map(dest => dest.phoneNo, src => src.MobileNo);
+         //   .Map(dest => dest.fullName, src => src.Username)
+         //  .Map(dest => dest.emailAddress, src => src.Email)
+         .Map(dest => dest.ICNum, src => src.IcNumber);
+    //     .Map(dest => dest.phoneNo, src => src.MobileNo);
 
     }
 }

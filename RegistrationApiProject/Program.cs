@@ -78,12 +78,12 @@ try
 
     // Register FluentValidation with all validators in the current assembly
     builder.Services.AddFluentValidationAutoValidation()
-        .AddValidatorsFromAssemblyContaining<ApplicationUserValidator>(); // Replace with any validator's type
+        .AddValidatorsFromAssemblyContaining<RegisterViewModelValidator>(); // Replace with any validator's type
 
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+/ ";
-        options.User.RequireUniqueEmail = false;
+        options.User.RequireUniqueEmail = true;
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = false;
         options.Password.RequireNonAlphanumeric = false;
@@ -107,9 +107,16 @@ try
         o.ReportApiVersions = true;
     });
 
+    //builder.Services.AddCors(cors => cors.AddPolicy("AllowApi", builder =>
+    //{
+    //    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    //}));
+
     builder.Services.AddCors(cors => cors.AddPolicy("AllowApi", builder =>
     {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        builder.AllowAnyOrigin() // Allows any origin
+               .AllowAnyMethod()
+               .AllowAnyHeader();
     }));
 
     builder.Services.AddRateLimiter(rateLimiterOptions =>
@@ -189,6 +196,12 @@ try
     builder.Services.AddEndpointsApiExplorer();
 
     var app = builder.Build();
+
+    //using(var scope = app.Services.CreateScope())
+    //{
+    //    var db = scope.ServiceProvider.GetRequiredService<DbContextClass>();
+    //    db.Database.Migrate();
+    //}
 
     app.UseMiddleware<GlobalExceptionMiddleWare>();
 

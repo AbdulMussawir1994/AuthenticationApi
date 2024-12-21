@@ -1,6 +1,7 @@
 ﻿
 using FluentValidation;
 using RegistrationApiProject.Model;
+using RegistrationApiProject.ViewModel;
 
 namespace RegistrationApiProject.DatabaseContext;
 
@@ -23,6 +24,32 @@ public class ApplicationUserValidator : AbstractValidator<ApplicationUser>
             .WithMessage("Phone number must start with +60 and have at least 9 digits.");
     }
 }
+
+public class RegisterViewModelValidator : AbstractValidator<RegisterViewModel>
+{
+    public RegisterViewModelValidator()
+    {
+        RuleFor(x => x.IcNumber)
+            .NotEmpty().WithMessage("IC Number is required.")
+            .Length(12).WithMessage("IC Number must be exactly 12 characters.")
+            .Matches("^[0-9]+$").WithMessage("IC Number must contain only digits.");
+
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required.")
+            .EmailAddress().WithMessage("Invalid email format.");
+
+        RuleFor(x => x.Username)
+            .NotEmpty().WithMessage("Username is required.")
+            .Length(3, 50).WithMessage("Username must be between 3 and 50 characters.");
+
+        RuleFor(x => x.MobileNo)
+            .NotEmpty().WithMessage("Mobile number is required.")
+          //  .Matches("^[0-9]+$").WithMessage("Mobile number must contain only digits.")
+            .Length(10, 15).WithMessage("Mobile number must be between 10 and 15 digits.");
+    }
+}
+
+
 
 public class OtpModelValidator : AbstractValidator<OtpModel>
 {

@@ -45,17 +45,17 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
 
         public async Task<ResponseObj<RegisterViewDto>> NewUserAsync(RegisterViewModel model)
         {
-            var existingUser = await _userManager.Users
-                .SingleOrDefaultAsync(u => u.IcNumber == model.IcNumber);
+            // Check if user already exists
+            var existingUser = await _userManager.Users.FirstOrDefaultAsync(u => u.IcNumber == model.IcNumber);
 
             if (existingUser is not null)
             {
                 return await ExistingUserAsync(existingUser, model);
             }
+
             return await RegisterNewUserAsync(model);
         }
 
-        // Method for handling an existing user who is unverified
         private async Task<ResponseObj<RegisterViewDto>> ExistingUserAsync(ApplicationUser existingUser, RegisterViewModel model)
         {
             if (existingUser.EmailConfirmed || existingUser.PhoneNumberConfirmed)
@@ -91,10 +91,7 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
                 Value = new RegisterViewDto
                 {
                     ICId = existingUser.Id,
-                    fullName = existingUser.UserName,
-                    emailAddress = existingUser.Email,
-                    identityNo = existingUser.IcNumber,
-                    phoneNo = existingUser.PhoneNumber
+                    ICNum = existingUser.IcNumber
                 },
                 Status = true,
                 Message = "OTP has been sent to the existing user for verification."
@@ -104,7 +101,6 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
         // Method for registering a new user
         private async Task<ResponseObj<RegisterViewDto>> RegisterNewUserAsync(RegisterViewModel model)
         {
-
             // Validate if the email already exists and is confirmed
             bool isEmailConfirmed = await _userManager.Users
                 .AnyAsync(user => user.Email == model.Email && user.EmailConfirmed);
@@ -125,51 +121,54 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
                 PhoneNumber = model.MobileNo,
                 Email = model.Email,
                 EmailConfirmed = false,
-                PhoneNumberConfirmed = false
+                PhoneNumberConfirmed = false,
+                DateCreated = DateTime.Now,
             };
 
             var executionStrategy = _context.Database.CreateExecutionStrategy();
+
             return await executionStrategy.ExecuteAsync(async () =>
             {
-                using (var transaction = await _context.Database.BeginTransactionAsync())
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    try
+                    // Create user and validate result
+                    var result = await _userManager.CreateAsync(user);
+                    if (!result.Succeeded)
                     {
-                        var result = await _userManager.CreateAsync(user);
-                        if (!result.Succeeded)
-                        {
-                            throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
-                        }
-
-                        await SendOtpAsync(user.Id, user.Email, user.PhoneNumber);
-
-                        var response = new ResponseObj<RegisterViewDto>
-                        {
-                            Value = new RegisterViewDto
-                            {
-                                ICId = user.Id,
-                                fullName = model.Username,
-                                emailAddress = model.Email,
-                                identityNo = model.IcNumber,
-                                phoneNo = model.MobileNo
-                            },
-                            Status = true,
-                            Message = "Registration successful. Please verify your Email & Mobile number."
-                        };
-
-                        await transaction.CommitAsync();
-                        return response;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Exception caught in RegisterNewUserAsync(): {ex}");
-                        await transaction.RollbackAsync();
                         return new ResponseObj<RegisterViewDto>
                         {
                             Status = false,
-                            Message = "An error occurred during registration. Please try again."
+                            Message = "User registration failed.",
+                            Errors = result.Errors.Select(e => e.Description).ToList()
                         };
                     }
+
+                    // Send OTP for email and phone verification
+                    await SendOtpAsync(user.Id, user.Email, user.PhoneNumber);
+
+                    // Commit transaction
+                    await transaction.CommitAsync();
+
+                    return new ResponseObj<RegisterViewDto>
+                    {
+                        Value = new RegisterViewDto
+                        {
+                            ICId = user.Id,
+                            ICNum = user.IcNumber
+                        },
+                        Status = true,
+                        Message = "Registration successful. Please verify your Email & Mobile number."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new ResponseObj<RegisterViewDto>
+                    {
+                        Status = false,
+                        Message = "An error occurred during registration. Please try again."
+                    };
                 }
             });
         }

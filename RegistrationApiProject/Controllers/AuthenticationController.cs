@@ -32,7 +32,7 @@ namespace RegistrationApiProject.Controllers
 
         [HttpPost]
         [Route("UserRegister")]
-        public async Task<ActionResult> NewUser(RegisterViewModel model)
+        public async Task<IActionResult> NewUser(RegisterViewModel model)
         {
             try
             {
@@ -40,17 +40,18 @@ namespace RegistrationApiProject.Controllers
 
                 if (!response.Status)
                 {
-                    return BadRequest(response);
+                    return BadRequest(new {  status = false, message = response.Message, errors = response.Errors  });
                 }
 
-                return StatusCode(StatusCodes.Status200OK, response);
+                return Ok(new { status = true,  message = response.Message,  data = response.Value  });
+
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { status = false, message = "An unexpected error occurred. Please try again later." });
             }
         }
+
 
         [HttpPost("VerifyEmailOtp")]
         public async Task<IActionResult> VerifyEmailOtpAsync(OtpViewModel model)
