@@ -78,7 +78,8 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
                 return new ResponseObj<RegisterViewDto>
                 {
                     Status = false,
-                    Message = "Failed to update existing user information."
+                    Message = "Failed to update existing user information.",
+                    Errors = updateResult.Errors.Select(e => e.Description).ToList()
                 };
             }
 
@@ -101,18 +102,37 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
         // Method for registering a new user
         private async Task<ResponseObj<RegisterViewDto>> RegisterNewUserAsync(RegisterViewModel model)
         {
-            // Validate if the email already exists and is confirmed
-            bool isEmailConfirmed = await _userManager.Users
-                .AnyAsync(user => user.Email == model.Email && user.EmailConfirmed);
 
-            if (isEmailConfirmed)
+            //bool isMobileConfirmed = await _userManager.Users.AnyAsync(user => user.PhoneNumber == model.MobileNo);
+            //if (isMobileConfirmed)
+            //{
+            //    return new ResponseObj<RegisterViewDto>
+            //    {
+            //        Status = false,
+            //        Message = "Mobile no is already registered."
+            //    };
+            //}
+
+            var duplicateUser = await _userManager.Users
+                .Where(user => user.Email == model.Email || user.PhoneNumber == model.MobileNo || user.UserName == model.Username)
+                .Select(user => new { IsEmailMatch = user.Email == model.Email, IsPhoneMatch = user.PhoneNumber == model.MobileNo, IsUsernameMatch = user.UserName == model.Username }) 
+                .FirstOrDefaultAsync();
+
+            if (duplicateUser != null)
             {
+                string message = duplicateUser.IsEmailMatch
+                    ? "Email is already registered."
+                    : duplicateUser.IsPhoneMatch
+                    ? "Mobile no is already registered."
+                    : "This User is already registered.";
+
                 return new ResponseObj<RegisterViewDto>
                 {
                     Status = false,
-                    Message = "Email is already registered."
+                    Message = message
                 };
             }
+
 
             var user = new ApplicationUser
             {

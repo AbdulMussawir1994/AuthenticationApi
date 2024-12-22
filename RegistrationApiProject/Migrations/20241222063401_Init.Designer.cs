@@ -12,7 +12,7 @@ using RegistrationApiProject.DatabaseContext;
 namespace RegistrationApiProject.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20241221200508_Init")]
+    [Migration("20241222063401_Init")]
     partial class Init
     {
         /// <inheritdoc />
