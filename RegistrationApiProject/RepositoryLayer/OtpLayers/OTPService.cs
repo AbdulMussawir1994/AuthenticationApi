@@ -15,19 +15,49 @@ namespace RegistrationApiProject.RepositoryLayer.OtpLayers
             _context = context;
         }
 
-        public async Task SaveOtpAsync(string userId, string code, string name)
+        //public async Task SaveOtpAsync(string userId, string code, string name)
+        //{
+        //    var malaysiaTime = TimeZoneInfo.FindSystemTimeZoneById("Asia/Kuala_Lumpur");
+        //    var createdAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, malaysiaTime);
+        //    var expiresAt = createdAt.AddMinutes(10);
+
+        //    var otp = new OtpModel
+        //    {
+        //        UserId = userId,
+        //        OtpCode = code,
+        //        OtpName = name,
+        //        CreatedAt = createdAt,
+        //        ExpiresAt = expiresAt
+        //    };
+
+        //    _context.OtpsDb.Add(otp);
+        //    await _context.SaveChangesAsync();
+        //}
+
+        public async Task SaveOtpAsync(string userId, string code, string name, string timeZoneId)
         {
-            var malaysiaTime = TimeZoneInfo.FindSystemTimeZoneById("Asia/Kuala_Lumpur");
-            var createdAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, malaysiaTime);
+            TimeZoneInfo timeZone;
+            try
+            {
+                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                throw new ArgumentException($"Invalid or unknown time zone: {timeZoneId}");
+            }
+
+            var utcNow = DateTimeOffset.UtcNow;
+            var createdAt = TimeZoneInfo.ConvertTime(utcNow, timeZone);
             var expiresAt = createdAt.AddMinutes(10);
 
+            // Create the OTP model
             var otp = new OtpModel
             {
                 UserId = userId,
                 OtpCode = code,
                 OtpName = name,
-                CreatedAt = createdAt,
-                ExpiresAt = expiresAt
+                CreatedAt = createdAt.UtcDateTime, 
+                ExpiresAt = expiresAt.UtcDateTime 
             };
 
             _context.OtpsDb.Add(otp);

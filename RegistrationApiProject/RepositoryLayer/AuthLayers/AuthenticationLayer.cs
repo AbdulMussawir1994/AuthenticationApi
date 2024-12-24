@@ -120,11 +120,7 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
 
             if (duplicateUser != null)
             {
-                string message = duplicateUser.IsEmailMatch
-                    ? "Email is already registered."
-                    : duplicateUser.IsPhoneMatch
-                    ? "Mobile no is already registered."
-                    : "This User is already registered.";
+                string message = duplicateUser.IsEmailMatch ? "Email is already registered." : duplicateUser.IsPhoneMatch  ? "Mobile no is already registered." : "This User is already registered.";
 
                 return new ResponseObj<RegisterViewDto>
                 {
@@ -132,7 +128,6 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
                     Message = message
                 };
             }
-
 
             var user = new ApplicationUser
             {
@@ -152,7 +147,6 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    // Create user and validate result
                     var result = await _userManager.CreateAsync(user);
                     if (!result.Succeeded)
                     {
@@ -164,10 +158,7 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
                         };
                     }
 
-                    // Send OTP for email and phone verification
                     await SendOtpAsync(user.Id, user.Email, user.PhoneNumber);
-
-                    // Commit transaction
                     await transaction.CommitAsync();
 
                     return new ResponseObj<RegisterViewDto>
@@ -197,11 +188,11 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
         private async Task SendOtpAsync(string userId, string email, string phoneNumber)
         {
             var emailOtp = GenerateVerificationCode();
-            await _otpService.SaveOtpAsync(userId, emailOtp, "Email");
+            await _otpService.SaveOtpAsync(userId, emailOtp, "Email", "Asia/Karachi");
             await _emailService.SendOtpAsync(email, emailOtp);
 
             var mobileOtp = GenerateVerificationCode();
-            await _otpService.SaveOtpAsync(userId, mobileOtp, "SMS");
+            await _otpService.SaveOtpAsync(userId, mobileOtp, "SMS", "Asia/Karachi");
             // Uncomment to send SMS
             // await _smsService.SendMobileVerificationCodeAsync(phoneNumber, mobileOtp);
         }
@@ -363,14 +354,14 @@ namespace RegistrationApiProject.RepositoryLayer.AuthLayers
             if (!user.EmailConfirmed)
             {
                 var emailOtp = GenerateVerificationCode();
-                await _otpService.SaveOtpAsync(user.Id, emailOtp, "Email");
+                await _otpService.SaveOtpAsync(user.Id, emailOtp, "Email", "Asia/Karachi");
                 await _emailService.SendOtpAsync(user.Email, emailOtp);
             }
 
             if (!user.PhoneNumberConfirmed)
             {
                 var mobileOtp = GenerateVerificationCode();
-                await _otpService.SaveOtpAsync(user.Id, mobileOtp, "SMS");
+                await _otpService.SaveOtpAsync(user.Id, mobileOtp, "SMS", "Asia/Karachi");
                // await _smsService.SendMobileVerificationCodeAsync(user.MobileNo, mobileOtp);
             }
         }
